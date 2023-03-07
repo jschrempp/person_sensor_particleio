@@ -1,6 +1,6 @@
-// #include <Arduino.h>
+#include "Arduino.h"
 // #include <Serial.h>
-#include <Wire.h>
+// #include <Wire.h>
 
 
 #include "person_sensor.h"
@@ -8,7 +8,7 @@
 // How long to wait between reading the sensor. The sensor can be read as
 // frequently as you like, but the results only change at about 5FPS, so
 // waiting for 200ms is reasonable.
-const int32_t SAMPLE_DELAY_MS = 200;
+const int32_t SAMPLE_DELAY_MS = 1000;
 
 Logger mainLog("app.main");
 
@@ -111,6 +111,9 @@ void loop() {
                 Serial.println("Streaming Disabled");
             }
             break;
+        default:
+            mainLog("serial command unknown");
+            break;
         }
     }
 
@@ -142,8 +145,8 @@ void loop() {
 
         // array to hold values we will display through serial port
         // set all values to 0
-        const int outputArrayDimension = 64;
-        int outputArray[outputArrayDimension * outputArrayDimension];
+        const int outputArrayDimension = 32;
+        static int outputArray[outputArrayDimension * outputArrayDimension];
         for (int i=0; i<outputArrayDimension * outputArrayDimension; i++){
             outputArray[i] = 0;
         }
