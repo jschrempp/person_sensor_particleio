@@ -8,7 +8,10 @@
 // How long to wait between reading the sensor. The sensor can be read as
 // frequently as you like, but the results only change at about 5FPS, so
 // waiting for 200ms is reasonable.
-const int32_t SAMPLE_DELAY_MS = 1000;
+const int32_t SAMPLE_DELAY_MS = 200;
+
+const int outputArrayDimension = 32;
+int outputArray[outputArrayDimension * outputArrayDimension];
 
 Logger mainLog("app.main");
 
@@ -59,17 +62,19 @@ int prettyPrintArray(int dataArray[], int numCols, int numRows) {
     //Pretty-print data with increasing y, decreasing x to reflect reality 
 
     int lines = 0;
+    int time = millis();
+    Serial.printlnf("%ld", time );
     Serial.print("\t        ");
     for (int i = numCols-1; i >= 0; i--) {
-        Serial.printf("%-5i",i);
+        Serial.printf("%-2i",i);
     }
     Serial.println();
     lines++;
     for(int y = 0; y <= numRows * (numCols - 1) ; y += numCols)  {
         Serial.print("\t");
-        Serial.printf("%-5i:  ", y/numCols);
+        Serial.printf("%-2i:  ", y/numCols);
         for (int x = numCols - 1 ; x >= 0 ; x--) {
-            Serial.printf("%-5d", dataArray[x + y]);
+            Serial.printf("%-2d", dataArray[x + y]);
         }
         Serial.println();
         lines++;
@@ -92,14 +97,14 @@ void setup() {
 }
 
 void loop() {
-    static bool enableStreamingDisplay;
+    static bool enableStreamingDisplay = true;
 
-    if (Serial.available() > 0) { // check if there's any data available on the serial port
+    if (Serial.available()) { // check if there's any data available on the serial port
         char command = Serial.read(); // read the incoming data and store it in a variable called "command"
-    
+        mainLog("serial available >0");
         // perform action based on the command received
         switch (command) {
-        case '0':
+        case '1':
             // toggle streaming display
             enableStreamingDisplay = !enableStreamingDisplay;
             if (enableStreamingDisplay) {
@@ -116,6 +121,7 @@ void loop() {
             break;
         }
     }
+
 
     // get results
     static int i = 0; 
@@ -138,15 +144,12 @@ void loop() {
             printHex(my_s_bytes[j]);
     }
 
-    Serial.println();
     }
 
     if (enableStreamingDisplay) {
 
         // array to hold values we will display through serial port
         // set all values to 0
-        const int outputArrayDimension = 32;
-        static int outputArray[outputArrayDimension * outputArrayDimension];
         for (int i=0; i<outputArrayDimension * outputArrayDimension; i++){
             outputArray[i] = 0;
         }
@@ -155,10 +158,10 @@ void loop() {
             const person_sensor_face_t* face = &results.faces[i];
 
             // bounding box scaled to size of output array
-            int left = face->box_left/outputArrayDimension;
-            int right = face->box_right/outputArrayDimension;
-            int top = face->box_top/outputArrayDimension;
-            int bottom = face->box_bottom/outputArrayDimension;
+            int left = map(face->box_left, 0, 256, 0, outputArrayDimension);
+            int right = map(face->box_right, 0, 256, 0, outputArrayDimension);
+            int top = map(face->box_top, 0, 256, 0, outputArrayDimension);
+            int bottom = map(face->box_bottom, 0, 256, 0, outputArrayDimension);
 
             for (int j=top; j<bottom; j++) {
                 for (int k=left; k<right; k++) {
@@ -180,6 +183,7 @@ void loop() {
 
     } else {
 
+        Serial.println();
         Serial.println("********");
         Serial.print(results.num_faces);
         Serial.println(" faces found");
@@ -206,6 +210,7 @@ void loop() {
             }
         }
     }
+    
     delay(SAMPLE_DELAY_MS);
 }
 
