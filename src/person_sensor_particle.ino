@@ -63,8 +63,8 @@ int prettyPrintArray(int dataArray[], int numCols, int numRows) {
 
     int lines = 0;
     int time = millis();
-    Serial.printlnf("%ld", time );
-    Serial.print("\t        ");
+    Serial.printlnf("%ld                                   ", time );
+    Serial.print("\t    ");
     for (int i = numCols-1; i >= 0; i--) {
         Serial.printf("%-2i",i);
     }
@@ -92,6 +92,8 @@ void setup() {
 
   Serial.begin(9600);
   Serial.println("Commands: 1 - toggle streaming");
+
+  moveTerminalCursorDown(40);
 
   mainLog("setup complete");
 }
