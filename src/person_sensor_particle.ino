@@ -11,7 +11,7 @@
 const int32_t SAMPLE_DELAY_MS = 200;
 
 const int outputArrayDimension = 32;
-int outputArray[outputArrayDimension * outputArrayDimension];
+char outputArray[outputArrayDimension * outputArrayDimension];
 
 Logger mainLog("app.main");
 
@@ -57,15 +57,15 @@ void moveTerminalCursorDown(int numlines) {
 /* ------------------------------ */
 // function to pretty print data to serial port
 //   retuns number of lines printed
-int prettyPrintArray(int dataArray[], int numCols, int numRows) {
+int prettyPrintArray(char dataArray[], int numCols, int numRows) {
     //The ST library returns the data transposed from zone mapping shown in datasheet
     //Pretty-print data with increasing y, decreasing x to reflect reality 
 
     int lines = 0;
     int time = millis();
-    Serial.printlnf("%ld                                   ", time );
+    Serial.printlnf("%d                                   ", time );
     Serial.print("\t    ");
-    for (int i = numCols-1; i >= 0; i--) {
+    for (int i = 0;  i < numCols; i++) {
         Serial.printf("%-2i",i);
     }
     Serial.println();
@@ -74,7 +74,7 @@ int prettyPrintArray(int dataArray[], int numCols, int numRows) {
         Serial.print("\t");
         Serial.printf("%-2i:  ", y/numCols);
         for (int x = numCols - 1 ; x >= 0 ; x--) {
-            Serial.printf("%-2d", dataArray[x + y]);
+            Serial.printf(" %c", dataArray[x + y]);
         }
         Serial.println();
         lines++;
@@ -137,14 +137,12 @@ void loop() {
         return;
     }
 
-   
-    
     
     if (results.num_faces <0){
         char* my_s_bytes = reinterpret_cast<char*>(&results);
         for(unsigned int j = 0; j <sizeof(results); j++){
             printHex(my_s_bytes[j]);
-    }
+        }
 
     }
 
@@ -153,7 +151,7 @@ void loop() {
         // array to hold values we will display through serial port
         // set all values to 0
         for (int i=0; i<outputArrayDimension * outputArrayDimension; i++){
-            outputArray[i] = 0;
+            outputArray[i] = ' ';
         }
 
         for (int i = 0; i < results.num_faces; ++i) {
@@ -165,9 +163,14 @@ void loop() {
             int top = map(face->box_top, 0, 256, 0, outputArrayDimension);
             int bottom = map(face->box_bottom, 0, 256, 0, outputArrayDimension);
 
+            char charToUse = 97 + i; // starts with a, then b, c, d, etc
+            if (face->is_facing) {
+                charToUse -= 32;   // make upper case if person is facing
+            }
+
             for (int j=top; j<bottom; j++) {
                 for (int k=left; k<right; k++) {
-                    outputArray[j*outputArrayDimension + k] = 1;
+                    outputArray[j*outputArrayDimension + k] = charToUse;
                 }
             }
         }
